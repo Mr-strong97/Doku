@@ -1,0 +1,12 @@
+/* Entrée du bandeau : fondu + légère descente (voir Banner.tsx). */
+
+.banner {
+  animation: banner-in 220ms ease-out both;
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}

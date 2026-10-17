@@ -1,0 +1,31 @@
+/* Aspect du préfixe pays et du champ téléphone (voir PhoneField.tsx). */
+
+.input {
+  outline: none;
+  font-variant-numeric: tabular-nums; /* chiffres de même largeur : les groupes restent alignés */
+}
+
+.input::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
+}
+
+/* Champ sur carte blanche (P02) : le préfixe est une pastille plus foncée */
+.prefix[data-appearance="filled"] {
+  background: var(--surface-chip);
+}
+
+/* Champ sur fond de page (P01) : le préfixe est séparé du numéro par un filet */
+.prefix[data-appearance="elevated"] {
+  position: relative;
+}
+
+.prefix[data-appearance="elevated"]::after {
+  content: "";
+  position: absolute;
+  top: 0.875rem;
+  right: 0;
+  bottom: 0.875rem;
+  width: 1px;
+  background: color-mix(in srgb, var(--ink-secondary) 25%, transparent);
+}

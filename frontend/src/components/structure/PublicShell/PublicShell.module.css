@@ -1,0 +1,16 @@
+/* Gabarit L1 : marges + zones de sécurité (encoche, barre de gestes). */
+
+.shell {
+  padding-top: max(2.375rem, env(safe-area-inset-top));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  padding-left: max(1.25rem, env(safe-area-inset-left));
+}
+
+/* Sur grand écran, le contenu se centre verticalement ; sur téléphone il reste en haut,
+   comme dans les maquettes (et le clavier ne le pousse pas hors de l'écran). */
+@media (min-width: 640px) {
+  .column {
+    margin-block: auto;
+  }
+}

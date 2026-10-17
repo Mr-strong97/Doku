@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Design tokens de Doku
+   --------------------------------------------------------------------------
+   Palette EXTRAITE des maquettes P01 et P02 (couleurs mesurées pixel par pixel).
+   À remplacer par la palette officielle dès qu'elle sera fournie (règle 13) : il suffit
+   de modifier les valeurs de ce bloc, aucun composant n'est à toucher.
+
+   Deux étapes :
+   1. :root déclare les couleurs brutes (utilisables partout, y compris dans les
+      fichiers *.module.css des animations) ;
+   2. @theme inline les expose à Tailwind (bg-brand-700, text-ink, border-line...).
+   ========================================================================== */
+:root {
+  /* Marque : vert-bleu profond des boutons et du logo */
+  --brand-900: #00494c; /* logo « Doku » */
+  --brand-800: #0b5256; /* bouton au survol */
+  --brand-700: #0e6266; /* boutons, liens, focus */
+
+  /* Succès (badge « Prêt pour le mode hors-ligne », « Identifiant principal ») */
+  --success-900: #004a41;
+  --success-700: #006459;
+
+  /* Texte. #5f6969 est le gris des maquettes (#6f7979) assombri pour atteindre le
+     contraste 4,5:1 exigé pour le texte (dossier Interfaces §5.8). */
+  --ink: #0b1c30;
+  --ink-soft: #3f4949;
+  --ink-muted: #5f6969;
+  --ink-secondary: #446274;
+
+  /* Surfaces */
+  --surface: #f8f9ff; /* fond de page */
+  --surface-card: #ffffff;
+  --surface-field: #eff4ff; /* champs sur carte blanche, panneaux d'information */
+  --surface-chip: #e5eeff; /* préfixe +243, étiquettes */
+  --line: #bec8c9; /* barres vides, séparateurs */
+
+  /* États. Absents des maquettes : proposés dans la même famille de teintes. */
+  --danger-700: #ba1a1a;
+  --danger-900: #93000a;
+  --danger-surface: #ffdad6;
+  --warning-600: #c77700;
+  --warning-900: #5c3d00;
+  --warning-surface: #fff0c9;
+
+  /* Ombres douces (couleur teintée plutôt que noir pur) */
+  --elevation-field: 0 1px 3px rgb(11 28 48 / 0.06), 0 1px 2px rgb(11 28 48 / 0.04);
+  --elevation-card: 0 2px 14px rgb(11 28 48 / 0.06);
+  --elevation-button: 0 3px 8px color-mix(in srgb, var(--brand-700) 25%, transparent);
+}
+
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-900: var(--brand-900);
+  --color-brand-800: var(--brand-800);
+  --color-brand-700: var(--brand-700);
+  --color-success-900: var(--success-900);
+  --color-success-700: var(--success-700);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-surface: var(--surface);
+  --color-surface-card: var(--surface-card);
+  --color-surface-field: var(--surface-field);
+  --color-surface-chip: var(--surface-chip);
+  --color-line: var(--line);
+  --color-danger-700: var(--danger-700);
+  --color-danger-900: var(--danger-900);
+  --color-danger-surface: var(--danger-surface);
+  --color-warning-600: var(--warning-600);
+  --color-warning-900: var(--warning-900);
+  --color-warning-surface: var(--warning-surface);
+
+  --radius-field: 0.75rem; /* 12 px : champs, boutons, panneaux */
+  --radius-card: 1rem; /* 16 px : cartes */
+
+  --shadow-field: var(--elevation-field);
+  --shadow-card: var(--elevation-card);
+  --shadow-button: var(--elevation-button);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%; /* empêche iOS d'agrandir le texte en paysage */
+  }
+
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Focus clavier toujours visible (accessibilité) */
+  :focus-visible {
+    outline: 2px solid var(--brand-700);
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================================
+   Mouvement : animations courtes (≈ 200 ms), désactivées si l'utilisateur le demande
+   (système « Réduire les animations »). Dossier Interfaces §5.8.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

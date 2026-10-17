@@ -1,0 +1,10 @@
+# Qualité du code : conventions PEP 8 (snake_case), imports triés, fonctions courtes.
+line-length = 100
+target-version = "py312"
+extend-exclude = ["migrations"]
+
+[lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "C90"]
+
+[lint.mccabe]
+max-complexity = 8  # une fonction qui se ramifie trop doit être découpée (règle n°6)

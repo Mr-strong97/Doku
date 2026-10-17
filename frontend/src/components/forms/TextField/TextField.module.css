@@ -1,0 +1,44 @@
+/* Animations du champ texte (voir TextField.tsx). */
+
+/* Le halo du cadre (FieldFrame) remplace le contour du champ : il reste bien visible */
+.input {
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
+}
+
+.reveal {
+  cursor: pointer;
+  transition:
+    color 200ms ease,
+    transform 160ms ease;
+}
+
+.reveal:hover {
+  color: var(--brand-900);
+}
+
+.reveal:active {
+  transform: scale(0.96);
+}
+
+/* Le contour clavier reste DANS le cadre (qui masque ce qui dépasse) */
+.reveal:focus-visible {
+  outline-offset: -4px;
+  border-radius: 0.625rem;
+}
+
+/* Icône œil / œil barré : fondu avec léger grossissement à chaque bascule */
+.revealIcon {
+  animation: reveal-icon-swap 180ms ease-out;
+}
+
+@keyframes reveal-icon-swap {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}

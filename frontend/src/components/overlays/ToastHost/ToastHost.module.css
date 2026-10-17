@@ -1,0 +1,24 @@
+/*
+ * Habillage des notifications aux couleurs de Doku. React Toastify se règle par des variables
+ * CSS : on les redéfinit ici, sur le conteneur. Le glissement d'entrée et de sortie, lui, vient
+ * de la transition « Slide » de la bibliothèque (voir ToastHost.tsx).
+ */
+
+.container {
+  --toastify-toast-width: min(92vw, 380px);
+  --toastify-toast-min-height: 56px;
+  --toastify-toast-bd-radius: 14px;
+  --toastify-toast-shadow: 0 8px 24px rgb(11 28 48 / 0.14);
+  --toastify-font-family: var(--font-sans);
+  --toastify-text-color-light: var(--ink);
+  --toastify-color-error: var(--danger-700);
+  --toastify-icon-color-error: var(--danger-700);
+  --toastify-color-info: var(--brand-700);
+  --toastify-icon-color-info: var(--brand-700);
+}
+
+.toast {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
