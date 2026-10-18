@@ -45,10 +45,10 @@ class PasswordField(serializers.CharField):
         super().__init__(**kwargs)
 
 
-def build_name_field() -> serializers.CharField:
+def build_name_field(**kwargs) -> serializers.CharField:
     """Champ « nom » (commerçant ou boutique) : longueur bornée, texte sans contrôle."""
     return serializers.CharField(
-        min_length=NAME_MIN_LENGTH, max_length=NAME_MAX_LENGTH, validators=[validate_plain_text]
+        min_length=NAME_MIN_LENGTH, max_length=NAME_MAX_LENGTH, validators=[validate_plain_text], **kwargs
     )
 
 
@@ -89,6 +89,47 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "phone", "full_name", "email"]
         read_only_fields = fields
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Profil modifiable du commerçant, isolé de la réponse de session."""
+
+    phone = PhoneField(required=False)
+    full_name = build_name_field(required=False)
+
+    class Meta:
+        model = User
+        fields = ["id", "phone", "full_name", "email"]
+        read_only_fields = ["id"]
+
+    def validate_email(self, value: str | None) -> str | None:
+        if value and User.objects.exclude(pk=self.instance.pk).filter(email=value).exists():
+            raise serializers.ValidationError("Cette adresse e-mail est déjà utilisée.")
+        return value
+
+    def validate_phone(self, value: str) -> str:
+        if User.objects.exclude(pk=self.instance.pk).filter(phone=value).exists():
+            raise serializers.ValidationError(messages.PHONE_TAKEN)
+        return value
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """Entrée de changement de mot de passe : aucune valeur sensible ne ressort."""
+
+    current_password = PasswordField()
+    new_password = PasswordField()
+
+    def validate_current_password(self, value: str) -> str:
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Le mot de passe actuel est incorrect.")
+        return value
+
+    def validate(self, attrs: dict) -> dict:
+        try:
+            validate_password(attrs["new_password"], user=self.context["request"].user)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError({"new_password": list(error.messages)}) from error
+        return attrs
 
 
 class ShopSerializer(serializers.ModelSerializer):

@@ -48,6 +48,22 @@
   --elevation-field: 0 1px 3px rgb(11 28 48 / 0.06), 0 1px 2px rgb(11 28 48 / 0.04);
   --elevation-card: 0 2px 14px rgb(11 28 48 / 0.06);
   --elevation-button: 0 3px 8px color-mix(in srgb, var(--brand-700) 25%, transparent);
+
+  /* Échelle partagée : aucun écran ne choisit sa propre géométrie. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --radius-control: 0.75rem;
+  --radius-panel: 1rem;
+  --page-max-width: 430px;
+  --app-nav-height: calc(4.75rem + env(safe-area-inset-bottom));
+  --motion-fast: 160ms;
+  --motion-standard: 220ms;
 }
 
 @theme inline {
@@ -88,10 +104,36 @@
   }
 
   body {
+    min-height: 100dvh;
     background: var(--surface);
     color: var(--ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--brand-700) 22%, white);
+    color: var(--ink);
+  }
+
+  * {
+    scrollbar-color: color-mix(in srgb, var(--brand-700) 45%, white) transparent;
+    scrollbar-width: thin;
   }
 
   /* Focus clavier toujours visible (accessibilité) */
@@ -114,4 +156,20 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Squelettes partagés : l'information attendue garde sa place sans faire croire à un état vide. */
+div[aria-label="Chargement du stock"],
+div[aria-label="Calcul du bilan"],
+div[aria-label="Chargement du catalogue"],
+div[aria-label="Chargement des ventes"] {
+  min-height: 12rem;
+  border-radius: var(--radius-card);
+  background: linear-gradient(100deg, #edf1f5 20%, #f9fbfc 40%, #edf1f5 60%);
+  background-size: 200% 100%;
+  animation: doku-skeleton 1.2s linear infinite;
+}
+
+@keyframes doku-skeleton {
+  to { background-position: -200% 0; }
 }

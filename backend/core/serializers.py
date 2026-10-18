@@ -14,7 +14,7 @@ class ShopSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shop
         fields = ["id", "name", "address", "phone", "reference_currency"]
-        read_only_fields = ["id", "name"]
+        read_only_fields = ["id"]
 
 
 class ExchangeRateSerializer(serializers.ModelSerializer):

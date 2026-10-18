@@ -35,13 +35,16 @@ const contentSecurityPolicy = [
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   // En développement, la CSP gênerait le rechargement à chaud : elle n'est active qu'en production.
   ...(isProduction
     ? [
+        // En production, Doku ne doit jamais être intégré dans une page tierce (clickjacking).
+        // En développement seulement, l'absence de cet en-tête permet le test dans un simulateur
+        // mobile qui repose sur un iframe.
+        { key: "X-Frame-Options", value: "DENY" },
         { key: "Content-Security-Policy", value: contentSecurityPolicy },
         { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
       ]

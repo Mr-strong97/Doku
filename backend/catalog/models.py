@@ -19,6 +19,10 @@ class Product(Mutable):
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.PROTECT, related_name="products")
     name = models.CharField(max_length=150)
     price_usd = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0"))
+    purchase_price_usd = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0"))
+    low_stock_threshold = models.PositiveIntegerField(default=5)
+    # Fichier image validé au niveau de l'API ; FileField évite une dépendance serveur à Pillow.
+    image = models.FileField(upload_to="products/%Y/%m/", null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:

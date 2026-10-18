@@ -7,9 +7,13 @@ from core.models import Timestamped
 
 
 class Sale(Timestamped):
+    # Les éventuelles ventes créées avant P06 n'avaient pas de numéro de reçu.
+    receipt_number = models.CharField(max_length=32, unique=True, null=True, blank=True)
     currency = models.CharField(max_length=3, choices=[("CDF", "CDF"), ("USD", "USD")])
     exchange_rate = models.DecimalField(max_digits=18, decimal_places=6)
     total = models.DecimalField(max_digits=18, decimal_places=2)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.CharField(max_length=255, blank=True)
 
     class Meta:
         db_table = "sale"

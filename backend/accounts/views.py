@@ -8,7 +8,7 @@ from django.conf import settings
 from django.utils.cache import add_never_cache_headers
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,10 +18,12 @@ from accounts.exceptions import SessionExpiredError
 from accounts.guards import ensure_trusted_client
 from accounts.serializers import (
     AccessTokenSerializer,
+    ChangePasswordSerializer,
     ErrorResponseSerializer,
     LoginSerializer,
     RegisterSerializer,
     SessionSerializer,
+    UserProfileSerializer,
 )
 from accounts.services import (
     Session,
@@ -147,3 +149,31 @@ class LogoutView(PublicAuthView):
         response = Response(status=status.HTTP_204_NO_CONTENT)
         clear_refresh_cookie(response)  # la déconnexion réussit toujours : idempotente
         return response
+
+
+class UserMeView(APIView):
+    """Lecture et modification du seul compte autorisé : celui du jeton courant."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        return Response(UserProfileSerializer(request.user).data)
+
+    def patch(self, request: Request) -> Response:
+        serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class ChangePasswordView(APIView):
+    """Vérifie l'ancien secret, applique la politique Django et hache le nouveau."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(serializer.validated_data["new_password"])
+        request.user.save(update_fields=["password", "updated_at"])
+        return Response(status=status.HTTP_204_NO_CONTENT)

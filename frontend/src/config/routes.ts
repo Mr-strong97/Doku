@@ -6,6 +6,11 @@ export const ROUTES = {
   onboarding: "/onboarding", // P03
   pos: "/pos", // P04
   checkout: "/pos/checkout", // P05
+  sales: "/sales", // P07
+  products: "/products", // P08
+  stock: "/stock",
+  stats: "/stats",
+  settings: "/settings",
 } as const;
 
 /**

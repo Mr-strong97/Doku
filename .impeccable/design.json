@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T00:00:00+01:00",
+  "title": "Design System: Doku",
+  "extensions": {
+    "colorMeta": {
+      "brand-deep-teal": { "role": "primary", "displayName": "Vert Doku profond", "canonical": "#00494c", "tonalRamp": ["#00494c", "#0e6266", "#e5f5f4"] },
+      "surface": { "role": "neutral", "displayName": "Fond bleuté", "canonical": "#f8f9ff", "tonalRamp": ["#f8f9ff", "#eff4ff", "#e5eeff"] },
+      "ink": { "role": "neutral", "displayName": "Encre Doku", "canonical": "#0b1c30", "tonalRamp": ["#0b1c30", "#446274", "#5f6969"] }
+    },
+    "shadows": [
+      { "name": "field", "value": "0 1px 3px rgb(11 28 48 / 0.06), 0 1px 2px rgb(11 28 48 / 0.04)", "purpose": "Champs et petites surfaces." },
+      { "name": "card", "value": "0 2px 14px rgb(11 28 48 / 0.06)", "purpose": "Cartes informatives." }
+    ],
+    "motion": [
+      { "name": "standard", "value": "150–250ms ease", "purpose": "Retour visuel concis, désactivé par prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-app", "value": "320–430px" }
+    ]
+  }
+}

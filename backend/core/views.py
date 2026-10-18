@@ -13,6 +13,9 @@ from core.serializers import ExchangeRateSerializer, ShopSettingsSerializer
 class ShopMeView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        return Response(ShopSettingsSerializer(request.user.shop).data)
+
     def patch(self, request):
         serializer = ShopSettingsSerializer(request.user.shop, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)

@@ -52,11 +52,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function restore() {
       const restored = await restoreSession().catch(() => null);
       if (isCancelled) return;
-      // On ne touche à l'état que s'il n'a pas déjà changé (connexion très rapide)
+      if (!restored) {
+        await flushPendingLogout(); // révoque un jeton laissé par une déconnexion hors ligne
+        if (!isCancelled) setStatus((current) => (current === "loading" ? "anonymous" : current));
+        return;
+      }
+
+      // Le jeton d'accès est uniquement en mémoire. On attend son renouvellement AVANT
+      // d'afficher les écrans protégés : sinon /products/ part sans Authorization et reçoit 401.
+      const refresh = await refreshAccessToken();
+      if (isCancelled) return;
+      if (refresh.status === "expired") {
+        setSession(null);
+        setStatus("anonymous");
+        return;
+      }
       setSession((current) => current ?? restored);
-      setStatus((current) => (current !== "loading" ? current : restored ? "authenticated" : "anonymous"));
-      if (restored) await refreshAccessToken(); // silencieux : obtient un nouveau jeton d'accès
-      else await flushPendingLogout(); // révoque un jeton laissé par une déconnexion hors ligne
+      setStatus((current) => (current === "loading" ? "authenticated" : current));
     }
 
     void restore();

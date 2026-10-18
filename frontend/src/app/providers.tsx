@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { ToastHost } from "@/components/overlays/ToastHost/ToastHost";
+import { ServiceWorkerRegistration } from "@/components/technical/ServiceWorkerRegistration";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 /**
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <AuthProvider>
       {children}
       <ToastHost />
+      <ServiceWorkerRegistration />
     </AuthProvider>
   );
 }
