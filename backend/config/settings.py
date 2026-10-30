@@ -79,7 +79,10 @@ REFRESH_COOKIE_PATH = "/api/v1/auth/"
 # Un cookie Secure est refusé sur http://localhost. En production (DEBUG=False),
 # il reste obligatoirement transmis uniquement en HTTPS.
 REFRESH_COOKIE_SECURE = not DEBUG
-REFRESH_COOKIE_SAMESITE = "Lax"
+# Le frontend Cloudflare et l'API Render sont sur deux sites distincts : le
+# navigateur n'envoie le cookie HttpOnly de refresh qu'avec SameSite=None en
+# production. Secure reste obligatoire dans ce mode.
+REFRESH_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 
 CLIENT_HEADER_NAME = "X-Doku-Client"
 CLIENT_HEADER_VALUE = "web"
