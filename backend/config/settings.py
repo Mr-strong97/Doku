@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+import os
 from datetime import timedelta
 from pathlib import Path
+
+import dj_database_url
 
 from corsheaders.defaults import default_headers
 
@@ -21,13 +24,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-yr7g7q8gk6)^cdzyr%5%pa%mndv1ar@)sf^t8o+as)qytf6y6$'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = []
+# Une clé temporaire permet le développement local. Render doit obligatoirement
+# recevoir SECRET_KEY comme variable d'environnement.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-development-only"
+    else:
+        raise RuntimeError("SECRET_KEY doit être défini lorsque DEBUG=False.")
+
+ALLOWED_HOSTS = [host for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host]
+CSRF_TRUSTED_ORIGINS = [
+    origin
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin
+]
 
 
 # Application definition
@@ -70,14 +84,14 @@ REFRESH_COOKIE_SAMESITE = "Lax"
 CLIENT_HEADER_NAME = "X-Doku-Client"
 CLIENT_HEADER_VALUE = "web"
 
-# Les deux hôtes sont distincts pour le navigateur : l'interface peut être ouverte
-# avec localhost ou 127.0.0.1 pendant le développement.
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
-# Next choisit automatiquement le port 3001 (ou suivant) si 3000 est occupé.
-# Cette souplesse est limitée à la machine locale et au mode développement.
-CORS_ALLOWED_ORIGIN_REGEXES = (
-    [r"^http://(localhost|127\.0\.0\.1):[0-9]+$"] if DEBUG else []
-)
+# En développement, Next peut choisir un port différent de 3000. En production,
+# seules les origines explicitement déclarées dans Render sont autorisées.
+CORS_ALLOWED_ORIGINS = [
+    origin
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin
+]
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^http://(localhost|127\.0\.0\.1):[0-9]+$"] if DEBUG else []
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [*default_headers, "x-doku-client"]
 CORS_EXPOSE_HEADERS = ["Retry-After"]
@@ -106,6 +120,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -138,12 +153,27 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=not DEBUG,
+        )
     }
-}
+else:
+    if not DEBUG:
+        raise RuntimeError("DATABASE_URL doit être défini lorsque DEBUG=False.")
+    # SQLite reste pratique pour le développement local et les tests. Render doit
+    # toujours recevoir DATABASE_URL, fournie par le projet Supabase.
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -180,9 +210,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
