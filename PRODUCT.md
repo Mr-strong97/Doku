@@ -2,7 +2,10 @@
 
 ## Produit
 
-Doku est une caisse et un outil de gestion commerciale installable sur téléphone. Il aide un commerçant à vendre, gérer son catalogue et son stock, consulter ses résultats et conserver ses données même lorsqu'Internet est indisponible.
+Doku est une caisse et un outil de gestion commerciale installable sur téléphone.
+ Il aide un commerçant à vendre, gérer son catalogue et son stock, 
+ consulter ses résultats et conserver 
+ ses données même lorsqu'Internet est indisponible.
 
 ## Utilisateurs et situation d'usage
 
