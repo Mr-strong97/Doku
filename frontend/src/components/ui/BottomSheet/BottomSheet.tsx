@@ -12,6 +12,11 @@ export function BottomSheet({ title, children, onClose, labelledBy }: BottomShee
   const generatedId = useId();
   const titleId = labelledBy ?? generatedId;
   const panelRef = useRef<HTMLElement>(null);
+  const closeRef = useRef(onClose);
+
+  // Les écrans passent souvent une fonction anonyme à `onClose`. La conserver
+  // dans une ref évite de rejouer l'effet de focus à chaque lettre saisie.
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -19,7 +24,7 @@ export function BottomSheet({ title, children, onClose, labelledBy }: BottomShee
     document.body.style.overflow = "hidden";
     panelRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { onClose(); return; }
+      if (event.key === "Escape") { closeRef.current(); return; }
       if (event.key !== "Tab") return;
       const focusable = panelRef.current?.querySelectorAll<HTMLElement>("button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])");
       if (!focusable?.length) { event.preventDefault(); return; }
@@ -29,11 +34,11 @@ export function BottomSheet({ title, children, onClose, labelledBy }: BottomShee
     };
     window.addEventListener("keydown", onKeyDown);
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); previous?.focus(); };
-  }, [onClose]);
-  return <div className={styles.backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+  }, []);
+  return <div className={styles.backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeRef.current(); }}>
     <section ref={panelRef} tabIndex={-1} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <div className={styles.handle} aria-hidden="true" />
-      <div className={styles.heading}><h2 id={titleId}>{title}</h2><button type="button" onClick={onClose} aria-label="Fermer"><X aria-hidden="true" size={22}/></button></div>
+      <div className={styles.heading}><h2 id={titleId}>{title}</h2><button type="button" onClick={() => closeRef.current()} aria-label="Fermer"><X aria-hidden="true" size={22}/></button></div>
       {children}
     </section>
   </div>;

@@ -9,6 +9,7 @@ class SaleItemInputSerializer(serializers.Serializer):
 
 
 class SaleCreateSerializer(serializers.Serializer):
+    client_id = serializers.UUIDField(required=False)
     currency = serializers.ChoiceField(choices=["CDF", "USD"])
     items = SaleItemInputSerializer(many=True, allow_empty=False)
 

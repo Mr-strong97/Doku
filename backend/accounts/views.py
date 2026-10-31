@@ -9,6 +9,7 @@ from django.utils.cache import add_never_cache_headers
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,6 +78,7 @@ class PublicAuthView(APIView):
 )
 class RegisterView(PublicAuthView):
     throttle_classes = [RegisterIpThrottle]
+    parser_classes = [JSONParser]
 
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)

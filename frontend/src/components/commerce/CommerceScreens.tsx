@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, CheckCircle2, CircleX, Filter, MessageCircle, PackagePlus, Search, Send, ShoppingBag, Trash2 } from "lucide-react";
+import { Archive, CheckCircle2, CircleX, Download, Filter, MessageCircle, PackagePlus, Search, Send, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -13,6 +13,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { apiClient } from "@/lib/api/client";
+import { shareReceiptImage } from "@/lib/receiptImage";
 import { notifyError, notifyInfo } from "@/lib/toast";
 
 import styles from "./CommerceScreens.module.css";
@@ -55,14 +56,24 @@ export function SalesHistoryScreen() {
 }
 
 export function SaleReceiptScreen() {
-  const { id } = useParams<{ id: string }>(); const { session } = useAuth(); const [sale, setSale] = useState<Sale | null>(null); const [modal, setModal] = useState<"whatsapp" | "cancel" | null>(null); const [phone, setPhone] = useState(""); const [reason, setReason] = useState("Erreur de saisie"); const [error, setError] = useState(false);
+  const { id } = useParams<{ id: string }>(); const { session } = useAuth(); const [sale, setSale] = useState<Sale | null>(null); const [modal, setModal] = useState<"whatsapp" | "cancel" | null>(null); const [reason, setReason] = useState("Erreur de saisie"); const [error, setError] = useState(false); const [sharing, setSharing] = useState(false);
   const load = useCallback(async () => { try { const { data } = await apiClient.get<Sale>(`/sales/${id}/`); setSale(data); setError(false); } catch { setError(true); } }, [id]);
   const { refresh, refreshing } = useAutoRefresh(load);
   const cancel = async () => { try { const { data } = await apiClient.post<Sale>(`/sales/${id}/cancel/`, { reason }); setSale(data); setModal(null); notifyInfo("Vente annulée et stock réintégré."); } catch { notifyError("Cette vente ne peut pas être annulée."); } };
-  const whatsapp = () => { if (!sale || !phone.trim()) { notifyError("Indiquez le numéro WhatsApp du client."); return; } const text = encodeURIComponent(`Reçu ${sale.receipt_number} · ${money(sale.total, sale.currency)} · Merci pour votre achat chez ${session?.shop.name ?? "notre boutique"}.`); window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=${text}`, "_blank", "noopener,noreferrer"); setModal(null); };
+  const whatsapp = async () => {
+    if (!sale) return;
+    setSharing(true);
+    try {
+      const result = await shareReceiptImage({ shopName: session?.shop.name ?? "Votre boutique", receiptNumber: sale.receipt_number, createdAt: sale.created_at, currency: sale.currency, total: sale.total, items: sale.items.map((item) => ({ name: item.name, quantity: item.quantity, lineTotal: item.line_total })) });
+      notifyInfo(result === "shared" ? "Choisissez WhatsApp dans la feuille de partage." : "Image du reçu téléchargée : joignez-la dans WhatsApp.");
+      setModal(null);
+    } catch (shareError) {
+      if ((shareError as DOMException).name !== "AbortError") notifyError("Le reçu image n’a pas pu être préparé.");
+    } finally { setSharing(false); }
+  };
   if (error && !sale) return <main className={styles.page}><PageHeader title="Vente" fallbackHref={ROUTES.sales}/><StatePanel kind="error" title="Vente introuvable" detail="Cette vente est peut-être indisponible. Retournez à l’historique." action={<Link className={styles.inlineLink} href={ROUTES.sales}>Voir les ventes</Link>}/></main>;
   if (!sale) return <main className={styles.page}><PageHeader title="Vente" fallbackHref={ROUTES.sales}/><div className={styles.skeleton}/></main>;
   return <main className={styles.page}><PageHeader title="Détail de vente" fallbackHref={ROUTES.sales}/><div className={sale.cancelled_at ? styles.cancelledStatus : styles.successStatus}>{sale.cancelled_at ? <CircleX aria-hidden="true" size={18}/> : <CheckCircle2 aria-hidden="true" size={18}/>}{sale.cancelled_at ? "Vente annulée" : "Vente enregistrée"}<InlineRefresh updating={refreshing} onRefresh={() => void refresh()}/></div><section className={styles.receipt}><div className={styles.receiptHead}><div><h2>{session?.shop.name ?? "Votre boutique"}</h2><p>Reçu {sale.receipt_number ?? "sans numéro"}</p></div><span>{dateTime(sale.created_at)}</span></div><div className={styles.receiptItems}>{sale.items.map((item) => <p key={`${item.name}-${item.unit_price}`}><span>{item.quantity} × {item.name}</span><b>{money(item.line_total, sale.currency)}</b></p>)}</div><div className={styles.receiptTotal}><span>Total</span><strong>{money(sale.total, sale.currency)}</strong></div><small>Taux appliqué : 1 USD = {sale.exchange_rate} FC</small></section>{!sale.cancelled_at && <div className={styles.receiptActions}><ActionButton onClick={() => setModal("whatsapp")}><MessageCircle aria-hidden="true" size={19}/> Envoyer par WhatsApp</ActionButton><Link className={styles.secondaryLink} href={ROUTES.pos}><ShoppingBag aria-hidden="true" size={18}/> Nouvelle vente</Link><button type="button" className={styles.cancelSale} onClick={() => setModal("cancel")}>Annuler la vente</button></div>}
-    {modal === "whatsapp" && <BottomSheet title="Envoyer le reçu par WhatsApp" onClose={() => setModal(null)}><p className={styles.sheetLead}>Le numéro reste uniquement sur votre téléphone.</p><label className={styles.field}>Numéro WhatsApp<input value={phone} inputMode="tel" autoComplete="tel" onChange={(event) => setPhone(event.target.value)} placeholder="+243 000 000 000"/></label><ActionButton onClick={whatsapp}><Send aria-hidden="true" size={18}/> Ouvrir WhatsApp</ActionButton></BottomSheet>}{modal === "cancel" && <BottomSheet title="Annuler cette vente ?" onClose={() => setModal(null)}><p className={styles.sheetLead}>Le stock sera réintégré. Cette action reste visible dans l’historique.</p><label className={styles.field}>Motif<select value={reason} onChange={(event) => setReason(event.target.value)}><option>Erreur de saisie</option><option>Client a changé d’avis</option><option>Problème de paiement</option><option>Autre raison</option></select></label><ActionButton tone="danger" onClick={() => void cancel()}><Trash2 aria-hidden="true" size={18}/> Confirmer l’annulation</ActionButton><ActionButton tone="secondary" onClick={() => setModal(null)}>Conserver la vente</ActionButton></BottomSheet>}
+    {modal === "whatsapp" && <BottomSheet title="Partager le reçu" onClose={() => setModal(null)}><p className={styles.sheetLead}>Une image Doku est préparée sur ce téléphone. Choisissez WhatsApp, puis votre client, dans la feuille de partage.</p><ActionButton disabled={sharing} onClick={() => void whatsapp()}>{sharing ? <Download aria-hidden="true" size={18}/> : <Send aria-hidden="true" size={18}/>}{sharing ? "Préparation de l’image…" : "Partager l’image du reçu"}</ActionButton></BottomSheet>}{modal === "cancel" && <BottomSheet title="Annuler cette vente ?" onClose={() => setModal(null)}><p className={styles.sheetLead}>Le stock sera réintégré. Cette action reste visible dans l’historique.</p><label className={styles.field}>Motif<select value={reason} onChange={(event) => setReason(event.target.value)}><option>Erreur de saisie</option><option>Client a changé d’avis</option><option>Problème de paiement</option><option>Autre raison</option></select></label><ActionButton tone="danger" onClick={() => void cancel()}><Trash2 aria-hidden="true" size={18}/> Confirmer l’annulation</ActionButton><ActionButton tone="secondary" onClick={() => setModal(null)}>Conserver la vente</ActionButton></BottomSheet>}
   </main>;
 }

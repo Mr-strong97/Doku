@@ -72,6 +72,12 @@ class RegisterSerializer(serializers.Serializer):
             validate_password(attrs["password"], user=candidate)
         except DjangoValidationError as error:
             raise serializers.ValidationError({"password": list(error.messages)}) from error
+        # Le validateur Django standard ne connaît que ses champs utilisateur
+        # historiques. Doku utilise `phone` et `full_name`, donc on interdit
+        # explicitement de réutiliser ces identifiants comme mot de passe.
+        password = attrs["password"].casefold()
+        if password in {attrs["phone"].casefold(), attrs["full_name"].casefold()}:
+            raise serializers.ValidationError({"password": ["Le mot de passe ne doit pas être votre nom ou votre numéro de téléphone."]})
         return attrs
 
 

@@ -12,6 +12,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { apiClient } from "@/lib/api/client";
+import { getPosSnapshot, queueSale, savePosSnapshot } from "@/lib/offline/pos";
 import { notifyError, notifyInfo } from "@/lib/toast";
 
 import styles from "./PosWorkspace.module.css";
@@ -56,16 +57,22 @@ export function PosWorkspace({ checkout = false }: { checkout?: boolean }) {
       const [catalogResponse, rateResponse] = await Promise.all([apiClient.get<ApiProduct[]>("/products/"), apiClient.get<ApiRate[]>("/exchange-rates/")]);
       const exchangeRate = Number(rateResponse.data[0]?.rate);
       setRate(Number.isFinite(exchangeRate) ? exchangeRate : null);
-      setProducts(catalogResponse.data.map((product) => ({
+      const nextProducts = catalogResponse.data.map((product) => ({
         id: product.id,
         name: product.name,
         stock: product.stock,
         imageUrl: product.image_url,
         category: product.category_name ?? "Sans catégorie",
         price: Number(product.price_usd) * (Number.isFinite(exchangeRate) ? exchangeRate : 0),
-      })));
+      }));
+      setProducts(nextProducts);
+      await savePosSnapshot(catalogResponse.data, Number.isFinite(exchangeRate) ? exchangeRate : null);
       setLoadError(false);
-    } catch { setLoadError(true); }
+    } catch {
+      const snapshot = await getPosSnapshot();
+      if (snapshot) { setProducts(snapshot.products); setRate(snapshot.rate); setLoadError(false); }
+      else setLoadError(true);
+    }
   }, []);
   const { refresh, refreshing, lastUpdated, hasLoaded } = useAutoRefresh(loadPosData);
 
@@ -94,6 +101,13 @@ export function PosWorkspace({ checkout = false }: { checkout?: boolean }) {
   }
   function clearCart() { setCart([]); sessionStorage.removeItem("doku-active-cart"); }
   async function submitSale() {
+    if (!navigator.onLine) {
+      await queueSale({ currency, items: cart.map((line) => ({ product_id: line.id, quantity: line.quantity })) });
+      clearCart();
+      notifyInfo("Vente enregistrée sur cet appareil. Elle sera synchronisée dès le retour d’Internet.");
+      router.push(ROUTES.pos);
+      return;
+    }
     try {
       const response = await apiClient.post<{ id: string }>("/sales/", { currency, items: cart.map((line) => ({ product_id: line.id, quantity: line.quantity })) });
       clearCart();

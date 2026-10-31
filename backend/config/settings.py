@@ -218,10 +218,41 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Les photos catalogue vont dans Supabase Storage en production. Les clés S3
+# n'appartiennent qu'à Render ; elles ne doivent jamais être préfixées par
+# NEXT_PUBLIC_ ni être ajoutées au dépôt.
+SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET", "")
+SUPABASE_STORAGE_ENDPOINT = os.getenv("SUPABASE_STORAGE_ENDPOINT", "")
+SUPABASE_STORAGE_ACCESS_KEY = os.getenv("SUPABASE_STORAGE_ACCESS_KEY", "")
+SUPABASE_STORAGE_SECRET_KEY = os.getenv("SUPABASE_STORAGE_SECRET_KEY", "")
+SUPABASE_STORAGE_PUBLIC_URL = os.getenv("SUPABASE_STORAGE_PUBLIC_URL", "")
+USE_SUPABASE_STORAGE = all(
+    (
+        SUPABASE_STORAGE_BUCKET,
+        SUPABASE_STORAGE_ENDPOINT,
+        SUPABASE_STORAGE_ACCESS_KEY,
+        SUPABASE_STORAGE_SECRET_KEY,
+        SUPABASE_STORAGE_PUBLIC_URL,
+    )
+)
+
 STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
+    "default": (
+        {
+            "BACKEND": "core.storage.SupabasePublicStorage",
+            "OPTIONS": {
+                "bucket_name": SUPABASE_STORAGE_BUCKET,
+                "endpoint_url": SUPABASE_STORAGE_ENDPOINT,
+                "region_name": os.getenv("SUPABASE_STORAGE_REGION", "eu-west-1"),
+                "access_key": SUPABASE_STORAGE_ACCESS_KEY,
+                "secret_key": SUPABASE_STORAGE_SECRET_KEY,
+                "file_overwrite": False,
+                "querystring_auth": False,
+            },
+        }
+        if USE_SUPABASE_STORAGE
+        else {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+    ),
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },

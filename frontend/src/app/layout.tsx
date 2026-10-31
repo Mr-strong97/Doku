@@ -24,6 +24,11 @@ const jakarta = localFont({
 export const metadata: Metadata = {
   title: { default: messages.brand.name, template: `%s · ${messages.brand.name}` },
   description: messages.brand.tagline,
+  applicationName: "Doku",
+  icons: {
+    icon: [{ url: "/icons/doku-192.png", type: "image/png", sizes: "192x192" }],
+    apple: [{ url: "/icons/doku-apple-180.png", type: "image/png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {

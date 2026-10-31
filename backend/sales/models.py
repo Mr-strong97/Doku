@@ -2,11 +2,15 @@
 
 from django.db import models
 from django.db.models import Q
+from uuid import uuid4
 
 from core.models import Timestamped
 
 
 class Sale(Timestamped):
+    # Identifiant généré par le téléphone : rend la synchronisation idempotente
+    # après une coupure réseau au moment de la réponse HTTP.
+    client_id = models.UUIDField(default=uuid4, unique=True, editable=False)
     # Les éventuelles ventes créées avant P06 n'avaient pas de numéro de reçu.
     receipt_number = models.CharField(max_length=32, unique=True, null=True, blank=True)
     currency = models.CharField(max_length=3, choices=[("CDF", "CDF"), ("USD", "USD")])
