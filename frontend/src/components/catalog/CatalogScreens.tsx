@@ -12,6 +12,7 @@ import { InlineRefresh, StatePanel } from "@/components/ui/StatePanel/StatePanel
 import { ROUTES } from "@/config/routes";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { apiClient } from "@/lib/api/client";
+import { productSaveError } from "@/lib/productErrors";
 import { notifyError, notifyInfo } from "@/lib/toast";
 
 import styles from "./CatalogScreens.module.css";
@@ -53,7 +54,7 @@ export function ProductFormScreen() {
     const validation = validate(); if (validation) { setError(validation); return; }
     setSaving(true); setError(null);
     try { const payload = new FormData(); payload.set("name", name.trim()); payload.set("purchase_price_usd", buy); payload.set("price_usd", sell); payload.set("low_stock_threshold", threshold); if (category) payload.set("category", category); if (!id) payload.set("initial_stock", stock); if (image) payload.set("image", image); const response = id ? await apiClient.patch<Product>(`/products/${id}/`, payload) : await apiClient.post<Product>("/products/", payload); notifyInfo("Produit enregistré."); router.replace(`/products/${response.data.id}`); }
-    catch { setError("Enregistrement impossible. Vérifiez les informations saisies puis réessayez."); }
+    catch (saveError) { setError(productSaveError(saveError, image !== null)); }
     finally { setSaving(false); }
   };
   const pickImage = (file?: File) => { if (!file) return; if (!/image\/(jpeg|png|webp)/.test(file.type) || file.size > 5 * 1024 * 1024) { setError("Choisissez une image JPG, PNG ou WebP de 5 Mo maximum."); return; } setImage(file); setPreview(URL.createObjectURL(file)); };
