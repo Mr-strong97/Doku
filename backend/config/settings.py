@@ -246,6 +246,9 @@ STORAGES = {
                 "region_name": os.getenv("SUPABASE_STORAGE_REGION", "eu-west-1"),
                 "access_key": SUPABASE_STORAGE_ACCESS_KEY,
                 "secret_key": SUPABASE_STORAGE_SECRET_KEY,
+                # Supabase expose son API compatible S3 sous /storage/v1/s3 :
+                # le bucket doit donc être dans le chemin, jamais dans le sous-domaine.
+                "addressing_style": "path",
                 "file_overwrite": False,
                 "querystring_auth": False,
             },
