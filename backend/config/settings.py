@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dj_database_url
 
@@ -221,15 +222,37 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Les photos catalogue vont dans Supabase Storage en production. Les clés S3
 # n'appartiennent qu'à Render ; elles ne doivent jamais être préfixées par
 # NEXT_PUBLIC_ ni être ajoutées au dépôt.
-SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET", "")
-SUPABASE_STORAGE_ENDPOINT = os.getenv("SUPABASE_STORAGE_ENDPOINT", "")
+SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET", "").strip()
+SUPABASE_STORAGE_ENDPOINT = os.getenv("SUPABASE_STORAGE_ENDPOINT", "").strip()
 SUPABASE_STORAGE_ACCESS_KEY = os.getenv("SUPABASE_STORAGE_ACCESS_KEY", "")
 SUPABASE_STORAGE_SECRET_KEY = os.getenv("SUPABASE_STORAGE_SECRET_KEY", "")
 SUPABASE_STORAGE_PUBLIC_URL = os.getenv("SUPABASE_STORAGE_PUBLIC_URL", "")
+
+
+def supabase_s3_endpoint(public_url: str, configured_endpoint: str) -> str:
+    """Construit l'endpoint S3 direct recommandé par Supabase.
+
+    L'URL publique sert aux lectures CDN (``<ref>.supabase.co``), tandis que
+    les écritures S3 doivent aller vers ``<ref>.storage.supabase.co``. Cela
+    évite les échecs de signature derrière la passerelle API.
+    """
+    parsed = urlparse(public_url)
+    hostname = parsed.hostname or ""
+    if hostname.endswith(".supabase.co") and ".storage.supabase.co" not in hostname:
+        project_ref = hostname.removesuffix(".supabase.co")
+        if project_ref:
+            return f"{parsed.scheme or 'https'}://{project_ref}.storage.supabase.co/storage/v1/s3"
+    return configured_endpoint.rstrip("/")
+
+
+SUPABASE_STORAGE_S3_ENDPOINT = supabase_s3_endpoint(
+    SUPABASE_STORAGE_PUBLIC_URL,
+    SUPABASE_STORAGE_ENDPOINT,
+)
 USE_SUPABASE_STORAGE = all(
     (
         SUPABASE_STORAGE_BUCKET,
-        SUPABASE_STORAGE_ENDPOINT,
+        SUPABASE_STORAGE_S3_ENDPOINT,
         SUPABASE_STORAGE_ACCESS_KEY,
         SUPABASE_STORAGE_SECRET_KEY,
         SUPABASE_STORAGE_PUBLIC_URL,
@@ -242,13 +265,14 @@ STORAGES = {
             "BACKEND": "core.storage.SupabasePublicStorage",
             "OPTIONS": {
                 "bucket_name": SUPABASE_STORAGE_BUCKET,
-                "endpoint_url": SUPABASE_STORAGE_ENDPOINT,
+                "endpoint_url": SUPABASE_STORAGE_S3_ENDPOINT,
                 "region_name": os.getenv("SUPABASE_STORAGE_REGION", "eu-west-1"),
                 "access_key": SUPABASE_STORAGE_ACCESS_KEY,
                 "secret_key": SUPABASE_STORAGE_SECRET_KEY,
                 # Supabase expose son API compatible S3 sous /storage/v1/s3 :
                 # le bucket doit donc être dans le chemin, jamais dans le sous-domaine.
                 "addressing_style": "path",
+                "signature_version": "s3v4",
                 "file_overwrite": False,
                 "querystring_auth": False,
             },
