@@ -3,7 +3,9 @@
  * volontairement hors du cache : les données métier sont conservées dans
  * IndexedDB puis synchronisées explicitement à la reconnexion.
  */
-const CACHE_NAME = "doku-shell-v2";
+// Incrémentez cette version à chaque livraison qui modifie le code client :
+// les scripts sont servis cache-first afin que Doku reste utilisable hors ligne.
+const CACHE_NAME = "doku-shell-v3";
 const OFFLINE_PAGE = "/offline";
 const APP_SHELL = [OFFLINE_PAGE, "/manifest.webmanifest", "/icons/doku-192.png", "/icons/doku-512.png"];
 
