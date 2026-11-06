@@ -14,7 +14,7 @@
     "dev:vinext": "vite dev --port 3001",
     "build:vinext": "vite build",
     "start:vinext": "vite preview",
-    "deploy:vinext": "vinext-cloudflare deploy --warm-cache"
+    "deploy:vinext": "vinext-cloudflare deploy"
   },
   "dependencies": {
     "@cloudflare/workers-response-store": "^1.1.4",
