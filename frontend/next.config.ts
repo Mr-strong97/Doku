@@ -8,6 +8,10 @@ import type { NextConfig } from "next";
 
 /** Origine de l'API : la seule adresse extérieure que la page a le droit de contacter. */
 const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1").origin;
+/** Origine publique des photos produit Supabase ; aucune clé n'est exposée ici. */
+const supabaseStorageOrigin = new URL(
+  process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL ?? "https://gczcpacjjwsvoxvaigvg.supabase.co",
+).origin;
 const isProduction = process.env.NODE_ENV === "production";
 
 /**
@@ -22,7 +26,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob: ${supabaseStorageOrigin}`,
   "font-src 'self' data:",
   `connect-src 'self' ${apiOrigin}`,
   "manifest-src 'self'",
