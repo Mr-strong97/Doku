@@ -6,8 +6,14 @@ import type { NextConfig } from "next";
  * sécurité de Doku (dossier §17.5 : « en-tête Content-Security-Policy sur le frontend »).
  */
 
-/** Origine de l'API : la seule adresse extérieure que la page a le droit de contacter. */
-const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1").origin;
+/**
+ * Origine de l'API : la seule adresse extérieure que la page a le droit de contacter.
+ * Cf. constants.ts : le build Cloudflare doit rester utilisable même sans variable locale.
+ */
+const defaultApiBaseUrl = process.env.NODE_ENV === "production"
+  ? "https://doku-api.onrender.com/api/v1"
+  : "http://localhost:8000/api/v1";
+const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? defaultApiBaseUrl).origin;
 /** Origine publique des photos produit Supabase ; aucune clé n'est exposée ici. */
 const supabaseStorageOrigin = new URL(
   process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL ?? "https://gczcpacjjwsvoxvaigvg.supabase.co",

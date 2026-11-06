@@ -6,8 +6,15 @@
  */
 
 // --- API ------------------------------------------------------------------------------
-/** Adresse de l'API Django. Se règle avec NEXT_PUBLIC_API_URL (voir .env.example). */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+/**
+ * Adresse de l'API Django. Elle peut être remplacée avec NEXT_PUBLIC_API_URL.
+ * Le Worker Cloudflare ne reçoit pas automatiquement les variables définies dans un shell
+ * local : en production, un repli vers Render évite qu'il tente d'appeler localhost.
+ */
+const DEFAULT_API_BASE_URL = process.env.NODE_ENV === "production"
+  ? "https://doku-api.onrender.com/api/v1"
+  : "http://localhost:8000/api/v1";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE_URL;
 export const API_TIMEOUT_MS = 15_000;
 
 /** En-tête exigé par le serveur sur les routes qui lisent le cookie (protection CSRF). */
